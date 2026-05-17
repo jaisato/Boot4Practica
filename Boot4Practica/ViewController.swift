@@ -60,13 +60,21 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     
     func setupAzureStorageConnect() {
+        // SECURITY FIX: Load credentials from a plist or Keychain, NEVER hardcode in source
+        guard let path = Bundle.main.path(forResource: "AzureConfig", ofType: "plist"),
+              let config = NSDictionary(contentsOfFile: path),
+              let accountName = config["AccountName"] as? String,
+              let accountKey = config["AccountKey"] as? String else {
+            print("ERROR: Azure credentials not found. Create AzureConfig.plist with AccountName and AccountKey.")
+            return
+        }
 
-        let credetials = AZSStorageCredentials(accountName: "juanboot4", accountKey: "4GrSb/HgrXwXBxWhpe8SzZkqdyDpUERY4kzZfE93Ud1Kea168R6GVyOOK0tIH9CvjnSkcgJp4wRkMRUpjBhilQ==")
+        let credetials = AZSStorageCredentials(accountName: accountName, accountKey: accountKey)
         do {
             acount = try AZSCloudStorageAccount(credentials: credetials, useHttps: true)
             blobClient = acount.getBlobClient()
             readAllContainers()
-            
+
         } catch let error {
             print("\(error.localizedDescription)")
         }
