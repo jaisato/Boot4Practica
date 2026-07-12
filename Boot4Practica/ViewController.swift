@@ -61,7 +61,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     func setupAzureStorageConnect() {
 
-        let credetials = AZSStorageCredentials(accountName: "juanboot4", accountKey: "4GrSb/HgrXwXBxWhpe8SzZkqdyDpUERY4kzZfE93Ud1Kea168R6GVyOOK0tIH9CvjnSkcgJp4wRkMRUpjBhilQ==")
+        let credetials = AZSStorageCredentials(accountName: "juanboot4", accountKey: "REPLACE_ME")
         do {
             acount = try AZSCloudStorageAccount(credentials: credetials, useHttps: true)
             blobClient = acount.getBlobClient()
