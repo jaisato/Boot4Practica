@@ -61,7 +61,12 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     func setupAzureStorageConnect() {
 
-        let credetials = AZSStorageCredentials(accountName: "juanboot4", accountKey: "4GrSb/HgrXwXBxWhpe8SzZkqdyDpUERY4kzZfE93Ud1Kea168R6GVyOOK0tIH9CvjnSkcgJp4wRkMRUpjBhilQ==")
+        // SECURITY: never hardcode Azure Storage credentials in source. Supply them at
+        // runtime from a secure store (Keychain / build config / server-issued SAS token).
+        // The previously committed account key is compromised and MUST be rotated in Azure.
+        let accountName = ProcessInfo.processInfo.environment["AZURE_STORAGE_ACCOUNT"] ?? ""
+        let accountKey = ProcessInfo.processInfo.environment["AZURE_STORAGE_KEY"] ?? ""
+        let credetials = AZSStorageCredentials(accountName: accountName, accountKey: accountKey)
         do {
             acount = try AZSCloudStorageAccount(credentials: credetials, useHttps: true)
             blobClient = acount.getBlobClient()
