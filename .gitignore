@@ -1,0 +1,13 @@
+# Secrets / local configuration - never commit real credentials
+*.env
+.env
+*Secrets*.plist
+*Credentials*.plist
+!*Credentials*.plist.example
+
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.DS_Store
