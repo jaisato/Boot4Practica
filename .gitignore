@@ -1,0 +1,3 @@
+
+# Local build settings holding the Azure Storage credentials. See SECURITY.md.
+*.xcconfig
