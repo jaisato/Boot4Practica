@@ -1,3 +1,9 @@
 
 # Local build settings holding the Azure Storage credentials. See SECURITY.md.
 *.xcconfig
+
+# Per-user Xcode state, and the reason it matters here: a scheme's environment
+# variables are stored inside xcuserdata/<user>.xcuserdatad/xcschemes/*.xcscheme
+# in plain text. SECURITY.md tells you to put the account key there, so leaving
+# these tracked would hand the key straight back to git on the next commit.
+xcuserdata/

@@ -43,6 +43,17 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     
     @IBAction func addNewConatiner(_ sender: Any) {
+        // setupAzureStorageConnect() returns without building a client when the
+        // credentials are missing, and blobClient is implicitly unwrapped. The
+        // button stays tappable, so on a fresh checkout this crashed the app
+        // instead of leaving the configuration error on the console where the
+        // guard above put it.
+        guard let blobClient = blobClient else {
+            print("Azure Storage is not configured, so there is nothing to create a container on. "
+                + "See SECURITY.md.")
+            return
+        }
+
         let containerRef =  blobClient.containerReference(fromName: "ejemplo1")
         
         containerRef.createContainerIfNotExists(with: .container, requestOptions: nil, operationContext: nil) { (error, noExits) in
