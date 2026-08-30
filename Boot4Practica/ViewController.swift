@@ -43,6 +43,17 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     
     @IBAction func addNewConatiner(_ sender: Any) {
+        // setupAzureStorageConnect() returns without building a client when the
+        // credentials are missing, and blobClient is implicitly unwrapped. The
+        // button stays tappable, so on a fresh checkout this crashed the app
+        // instead of leaving the configuration error on the console where the
+        // guard above put it.
+        guard let blobClient = blobClient else {
+            print("Azure Storage is not configured, so there is nothing to create a container on. "
+                + "See SECURITY.md.")
+            return
+        }
+
         let containerRef =  blobClient.containerReference(fromName: "ejemplo1")
         
         containerRef.createContainerIfNotExists(with: .container, requestOptions: nil, operationContext: nil) { (error, noExits) in
@@ -59,11 +70,48 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
     }
     
+    /// Reads a value from Info.plist, letting an environment variable of the
+    /// same name win. The scheme's environment is the convenient place to put a
+    /// key while developing; the plist entry is what a build uses.
+    fileprivate func configurationValue(_ key: String) -> String? {
+        if let fromEnvironment = ProcessInfo.processInfo.environment[key], !fromEnvironment.isEmpty {
+            return fromEnvironment
+        }
+
+        guard let fromPlist = Bundle.main.object(forInfoDictionaryKey: key) as? String,
+              !fromPlist.isEmpty,
+              !fromPlist.hasPrefix("$(") else {
+            return nil
+        }
+
+        return fromPlist
+    }
+
     func setupAzureStorageConnect() {
 
-        let credetials = AZSStorageCredentials(accountName: "juanboot4", accountKey: "4GrSb/HgrXwXBxWhpe8SzZkqdyDpUERY4kzZfE93Ud1Kea168R6GVyOOK0tIH9CvjnSkcgJp4wRkMRUpjBhilQ==")
+        // The account name and key used to be literals right here. An Azure
+        // Storage account key is not a client credential: it grants full read,
+        // write and delete over every container in the account, and this file
+        // is in a public repository, so the key that was here has to be treated
+        // as compromised and rotated in the Azure portal. Removing it from the
+        // source does not unpublish it - it stays in the git history.
+        //
+        // Note that a key shipped inside an app bundle is extractable whatever
+        // holds it; the right long-term answer is a SAS token issued by a
+        // backend. This at least keeps it out of version control.
+        guard let accountName = configurationValue("AZURE_STORAGE_ACCOUNT_NAME"),
+              let accountKey = configurationValue("AZURE_STORAGE_ACCOUNT_KEY") else {
+            // A plain string literal, not a """ block: this target is Swift 3,
+            // which has no multi-line string literals.
+            print("Missing Azure Storage credentials. Set AZURE_STORAGE_ACCOUNT_NAME and "
+                + "AZURE_STORAGE_ACCOUNT_KEY in the scheme's environment, or as Info.plist "
+                + "entries fed from a build setting.")
+            return
+        }
+
+        let credentials = AZSStorageCredentials(accountName: accountName, accountKey: accountKey)
         do {
-            acount = try AZSCloudStorageAccount(credentials: credetials, useHttps: true)
+            acount = try AZSCloudStorageAccount(credentials: credentials, useHttps: true)
             blobClient = acount.getBlobClient()
             readAllContainers()
             
