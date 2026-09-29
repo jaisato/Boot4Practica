@@ -133,9 +133,13 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                                             }
                                             
                                             
-                                            self.model = (containersResults?.results)!
+                                            // No force-unwrap of the results, and the model is swapped on
+                                            // the main queue: the table view reads it from there, and this
+                                            // completion runs on a background one.
+                                            let containers = containersResults?.results ?? []
                                             
                                             DispatchQueue.main.async {
+                                                self.model = containers
                                                 self.tableView.reloadData()
                                             }
         

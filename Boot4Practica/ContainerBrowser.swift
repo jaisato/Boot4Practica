@@ -55,6 +55,9 @@ class ContainerBrowser: UIViewController, UITableViewDelegate, UITableViewDataSo
         blobLocal.delete { (error) in
             if let _ = error {
                 print("\(error?.localizedDescription)")
+                // The row was already removed optimistically; reload so the
+                // list shows the blob that is in fact still there.
+                self.readAllBlobs(inContainer: self.nameCurrentContainer)
                 return
             }
         }
@@ -78,10 +81,15 @@ class ContainerBrowser: UIViewController, UITableViewDelegate, UITableViewDataSo
                                             return
                                         }
                                         
-                                        self.model = results?.blobs as! [AZSCloudBlockBlob]
+                                        // A forced cast crashed the screen as soon as the listing held
+                                        // anything that is not a block blob; keep only the ones this
+                                        // browser knows how to handle.
+                                        let blobs = (results?.blobs ?? []).flatMap { $0 as? AZSCloudBlockBlob }
                                         
+                                        // The completion runs on a background queue while the table view
+                                        // reads model on the main one, so the swap has to happen there too.
                                         DispatchQueue.main.async {
-                                            /// aqui sincronizar
+                                            self.model = blobs
                                             self.tableView.reloadData()
                                         }
         }
